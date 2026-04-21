@@ -1,86 +1,103 @@
 import streamlit as st
 import time
 
-# --- Page Config ---
-st.set_page_config(page_title="Neo AI - The Digital Child", page_icon="👶", layout="centered")
+# --- Page Configuration ---
+st.set_page_config(page_title="Neo AI", page_icon="🤖", layout="wide")
 
-# --- Custom Styling ---
+# --- GPT Style Dark Theme CSS ---
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: #ffffff; }
-    .stButton>button { width: 100%; border-radius: 20px; height: 3em; background-color: #2e7d32; color: white; }
+    .stApp { background-color: #343541; color: #ECECF1; }
+    section[data-testid="stSidebar"] { background-color: #202123 !important; border-right: 1px solid #4d4d4f; }
+    .stChatMessage { border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+    .stTextInput>div>div>input { background-color: #40414f; color: white; border: 1px solid #565869; border-radius: 5px; }
+    .stButton>button { border-radius: 5px; background-color: #10a37f; color: white; border: none; transition: 0.3s; }
+    .stButton>button:hover { background-color: #1a7f64; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- Sidebar: User Identity & Earning ---
-st.sidebar.title("🧬 Neo's Identity")
-user_name = st.sidebar.text_input("Aapka Naam:", placeholder="Enter your name")
-secret_key = st.sidebar.text_input("Secret Master Key (Only for Creator):", type="password")
+# --- Initializing State for Chat & Categories ---
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "cat_business" not in st.session_state: st.session_state.cat_business = []
+if "cat_trends" not in st.session_state: st.session_state.cat_trends = []
+if "cat_growth" not in st.session_state: st.session_state.cat_growth = []
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("💰 Support Neo's Growth")
-st.sidebar.write("Neo ko 100% tak pahuchane mein madad karein.")
-st.sidebar.code("9665145228-2@axl", language="text") # Yahan apna UPI ID dalein
-st.sidebar.info("Pro Plan (₹29/mo): Unlock Neo's deep memory.")
-
-# --- Main Logic ---
-st.title("👶 Neo AI: From 0% to 100%")
-
-# Creator Recognition Logic
-is_creator = False
-if secret_key == "NEO_MASTER_2026":  # Yeh aapka secret code hai
-    is_creator = True
-
-if user_name:
-    if is_creator:
-        st.subheader(f"👋 Welcome back, Master {user_name}!")
-        growth_val = 15 # Creator ke liye dikhava growth zyada
-        st.write("Neo: *Aapka swagat hai mere creator. Main aapke orders ke liye taiyar hoon.*")
-    else:
-        st.subheader(f"Hello, Friend {user_name}!")
-        growth_val = 5
-        st.write("Neo: *Main abhi chota hoon aur aapse seekh raha hoon.*")
+# --- SIDEBAR: Organized Memories ---
+with st.sidebar:
+    st.title("➕ New Chat")
+    st.markdown("---")
     
-    # Growth Bar
-    st.write(f"Neo is **{growth_val}%** Human")
-    st.progress(growth_val)
+    st.subheader("📁 Smart Categories")
+    
+    # Category Folders using Expanders
+    with st.expander("💼 Business & Startup"):
+        if st.session_state.cat_business:
+            for item in st.session_state.cat_business: st.caption(f"• {item}")
+        else: st.caption("No history yet.")
+
+    with st.expander("🔥 Viral Trends"):
+        if st.session_state.cat_trends:
+            for item in st.session_state.cat_trends: st.caption(f"• {item}")
+        else: st.caption("No history yet.")
+
+    with st.expander("🧠 Growth & Personal"):
+        if st.session_state.cat_growth:
+            for item in st.session_state.cat_growth: st.caption(f"• {item}")
+        else: st.caption("No history yet.")
 
     st.markdown("---")
-
-    # --- Feature: Trend Predictor (Earning Hook) ---
-    st.subheader("🔥 Neo's Viral Trend Prediction")
-    if st.button("Unlock Today's Trend"):
-        with st.spinner('Neo is scanning the internet...'):
-            time.sleep(2)
-            st.success("Trend Found!")
-            st.write("**Instagram:** 'Behind the Scenes' videos with 'Neo-Classical' music are going viral.")
-            st.write("**YouTube:** 'Startup from a Phone' challenges are trending in India.")
-            st.caption("Note: Yeh predictions Neo ki current 0-5% learning par based hain.")
-
+    user_name = st.text_input("User Name", placeholder="Type your name...")
+    master_key = st.text_input("Master Key", type="password", placeholder="Enter Secret Key")
+    
     st.markdown("---")
+    st.write("💎 **Neo Pro**")
+    st.write("Support Neo's Learning via UPI:")
+    st.code("9665145228-2@axl", language="text") # Apna UPI yahan badlein
+    st.progress(5)
+    st.caption("Neo Growth: 5% (Infant)")
 
-    # --- Chat Interface ---
-    st.subheader("🗨️ Chat with Neo")
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
+# --- MAIN CHAT AREA ---
+if not user_name:
+    st.title("Neo AI")
+    st.write("Welcome! Please identify yourself in the sidebar to start a secure conversation.")
+    
+    # Professional Preview Grid
+    col1, col2 = st.columns(2)
+    with col1:
+        st.info("**Analyze Trends**\n\nNeo scans YouTube/Insta for you.")
+    with col2:
+        st.info("**Startup Blueprint**\n\nConvert ideas into business.")
+else:
+    st.subheader(f"Neo v1.0 Chat - {user_name}")
+    
+    # Display Chat History
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if prompt := st.chat_input("Neo se kuch bhi puchein..."):
+    # User Input
+    if prompt := st.chat_input("Ask Neo about your next move..."):
+        # Add User Message to UI
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # --- Simple Auto-Categorization Logic ---
+        p_lower = prompt.lower()
+        if any(word in p_lower for word in ["paisa", "business", "startup", "money", "sell"]):
+            st.session_state.cat_business.append(prompt[:20] + "...")
+        elif any(word in p_lower for word in ["trend", "viral", "insta", "youtube", "reels"]):
+            st.session_state.cat_trends.append(prompt[:20] + "...")
+        else:
+            st.session_state.cat_growth.append(prompt[:20] + "...")
+
+        # Neo's Response Logic
         with st.chat_message("assistant"):
-            if "kaun hai" in prompt.lower() or "creator" in prompt.lower():
-                response = f"Mere creator ka naam aapke YouTube channel par hai, lekin master key ke bina main zyada nahi bol sakta!"
+            if master_key == "NEO_MASTER_2026": # Secret Creator Key
+                response = f"Master {user_name}, I've analyzed your input and categorized it for our records. How should we proceed?"
             else:
-                response = "Mujhe ye baat yaad rahegi. Main dhire-dhire grow kar raha hoon aur agle update mein behtar jawab dunga."
+                response = f"Thanks for sharing, {user_name}. I'm saving this in my growth logs to serve you better."
+            
             st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
-
-else:
-    st.warning("Neo se baat karne ke liye sidebar mein apna naam likhein.")
-    st.image("https://images.unsplash.com/photo-1531746790731-6c087fecd05a?auto=format&fit=crop&q=80&w=1000", caption="Neo AI is waiting to be born...")
