@@ -18,18 +18,16 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 2. PRIVATE EMAIL ENGINE ---
-# Yeh details ab secure hain
 SENDER_EMAIL = "nichitesurekha61@gmail.com" 
 SENDER_PASSWORD = "wlbyzggcamomaxsw" 
 
 def send_otp_email(receiver_email, otp):
     try:
         msg = EmailMessage()
-        msg.set_content(f"Your Neo AI Verification Code is: {otp}\n\nThis code is valid for 10 minutes. Do not share it.")
+        msg.set_content(f"Your Neo AI Verification Code is: {otp}\n\nDo not share it.")
         msg['Subject'] = "Neo AI Security Code"
         msg['From'] = SENDER_EMAIL
         msg['To'] = receiver_email
-
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
             smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
             smtp.send_message(msg)
@@ -45,64 +43,61 @@ if "thumbs_left" not in st.session_state: st.session_state.thumbs_left = 3
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "is_master" not in st.session_state: st.session_state.is_master = False
 
-# --- 4. SECURE AUTH GATEWAY (NO DEV NOTES) ---
+# --- 4. SECURE AUTH GATEWAY ---
 def show_auth_gate():
     st.markdown("<div class='auth-container'>", unsafe_allow_html=True)
     st.title("🛡️ Neo Secure Access")
     
-    # STEP 1: Email Entry
     if st.session_state.auth_step == "email_entry":
         email = st.text_input("Enter your Email", placeholder="example@gmail.com")
         if st.button("Send Verification Code"):
             if "@" in email and "." in email:
-                otp = str(random.randint(111111, 999999)) # 6-digit for more security
-                with st.spinner("Sending code to your inbox..."):
+                otp = str(random.randint(111111, 999999))
+                with st.spinner("Sending code..."):
                     if send_otp_email(email, otp):
                         st.session_state.generated_otp = otp
                         st.session_state.user_email = email
                         st.session_state.auth_step = "otp_verify"
-                        st.success("Code sent! Check your Inbox or Spam folder.")
+                        st.success("Code sent! Check your Inbox.")
                         time.sleep(1)
                         st.rerun()
                     else:
-                        st.error("Failed to send email. Check your connection.")
+                        st.error("Email failed. Try again.")
             else:
-                st.error("Enter a valid email address.")
+                st.error("Enter a valid email.")
 
-    # STEP 2: OTP Verification (CLEAN - NO OTP SHOWN)
     elif st.session_state.auth_step == "otp_verify":
-        st.info(f"Verify your email: {st.session_state.user_email}")
+        st.info(f"Verify email: {st.session_state.user_email}")
         otp_in = st.text_input("Enter 6-Digit Code", placeholder="XXXXXX")
         if st.button("Verify Code"):
             if otp_in == st.session_state.generated_otp:
                 st.session_state.auth_step = "set_password"
                 st.rerun()
             else:
-                st.error("Incorrect code. Please check your email again.")
+                st.error("Incorrect code.")
 
-    # STEP 3: Password Creation
     elif st.session_state.auth_step == "set_password":
-        st.subheader("Create Your Account")
+        st.subheader("Create Password")
         p1 = st.text_input("New Password", type="password")
         p2 = st.text_input("Confirm Password", type="password")
         if st.button("Register & Login"):
             if len(p1) >= 6 and p1 == p2:
                 st.session_state.auth_step = "verified"
-                st.success("Registration Complete!")
+                st.success("Done!")
                 time.sleep(1)
                 st.rerun()
             else:
-                st.error("Passwords must match and be at least 6 characters.")
+                st.error("Passwords must match (6+ chars).")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 5. MAIN BEAST APPLICATION ---
+# --- 5. MAIN APPLICATION LOGIC ---
 if st.session_state.auth_step != "verified":
     show_auth_gate()
 else:
-    # Sidebar
+    # Sidebar Setup
     with st.sidebar:
         st.title("Neo v7.5 Pro 🚀")
-        st.write(f"Logged in: **{st.session_state.user_email}**")
+        st.write(f"Logged in: {st.session_state.user_email}")
         m_key = st.text_input("Master Key", type="password")
         if m_key == "NEO_MASTER_2026":
             st.session_state.is_master = True
@@ -114,71 +109,14 @@ else:
 
     tab1, tab2, tab3 = st.tabs(["🗨️ Chat", "🖼️ AI Thumbnail", "💎 Pro Upgrade"])
 
-    with tab1: # GPT-Style Chat
-        for chat in st.session_state.chat_history:
-            with st.chat_message(chat["role"]): st.markdown(chat["content"])
-        if prompt := st.chat_input("Ask the Beast..."):
-            st.session_state.chat_history.append({"role": "user", "content": prompt})
-            with st.chat_message("user"): st.markdown(prompt)
-            with st.chat_message("assistant"):
-                full_text = f"### 🚀 ANALYSIS COMPLETE\nFor '{prompt}':\n\n1. **Trend:** High growth.\n2. **Action:** Post immediately."
-                placeholder = st.empty()
-                typed = ""
-                for word in full_text.split(" "):
-                    typed += word + " "
-                    placeholder.markdown(typed + "▌")
-                    time.sleep(0.06)
-                placeholder.markdown(typed)
-                st.session_state.chat_history.append({"role": "assistant", "content": typed})
-
-    with tab2: # Thumbnail
-        topic = st.text_input("Thumbnail Topic")
-        if st.button("Generate"):
-            if st.session_state.thumbs_left > 0 or st.session_state.is_master:
-                with st.spinner("Designing..."):
-                    time.sleep(2)
-                    if not st.session_state.is_master: st.session_state.thumbs_left -= 1
-                    st.image("https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800")
-            else:
-                st.error("Limit Reached! Upgrade below.")
-
-    with tab3: # Payment
-        st.markdown(f"""
-        <div style="border: 1px solid #EEE; padding: 20px; border-radius: 10px; text-align: center;">
-            <h3>Pro Access - ₹49</h3>
-            <p>15+ Viral Thumbnails Monthly</p>
-            <a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=NeoPro_{st.session_state.user_email}" class="btn-redirect">Pay via UPI</a>
-        </div>
-        """, unsafe_allow_html=True)
-else:
-    # Sidebar Logic
-    with st.sidebar:
-        st.title("Neo v7.5 Pro 🚀")
-        st.write(f"User: **{st.session_state.user_email}**")
-        
-        m_key = st.text_input("Master Key", type="password")
-        if m_key == "NEO_MASTER_2026":
-            st.session_state.is_master = True
-            st.success("MASTER ACTIVE")
-            
-        st.markdown(f'<span class="premium-badge">CREDITS: {st.session_state.thumbs_left if not st.session_state.is_master else "∞ UNLIMITED"}</span>', unsafe_allow_html=True)
-        st.markdown("---")
-        if st.button("🔴 Logout"):
-            st.session_state.auth_step = "email_entry"
-            st.rerun()
-
-    tab1, tab2, tab3, tab4 = st.tabs(["🗨️ Chat", "🖼️ AI Thumbnail", "📈 Creator Roadmap", "💎 Pro"])
-
     with tab1:
-        st.subheader("Deep Intelligence")
         for chat in st.session_state.chat_history:
             with st.chat_message(chat["role"]): st.markdown(chat["content"])
-        
         if prompt := st.chat_input("Ask the Beast..."):
             st.session_state.chat_history.append({"role": "user", "content": prompt})
             with st.chat_message("user"): st.markdown(prompt)
             with st.chat_message("assistant"):
-                full_text = f"### 🚀 BEAST RESPONSE\nAnalyzing: **{prompt}**\n\n1. **Trend:** High growth potential.\n2. **Action:** Implementation needed within 12 hours.\n3. **Roadmap:** Phase 1 complete."
+                full_text = f"### 🚀 ANALYSIS\nFor '{prompt}': Trend is High. Execution required."
                 placeholder = st.empty()
                 typed = ""
                 for word in full_text.split(" "):
@@ -189,32 +127,21 @@ else:
                 st.session_state.chat_history.append({"role": "assistant", "content": typed})
 
     with tab2:
-        st.subheader("🎥 Thumbnail Generator")
-        topic = st.text_input("Enter Topic")
-        if st.button("Generate Thumbnail"):
+        topic = st.text_input("Thumbnail Topic")
+        if st.button("Generate"):
             if st.session_state.thumbs_left > 0 or st.session_state.is_master:
                 with st.spinner("Designing..."):
                     time.sleep(2)
                     if not st.session_state.is_master: st.session_state.thumbs_left -= 1
                     st.image("https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800")
             else:
-                st.error("Limit Reached! Upgrade to Pro.")
+                st.error("Limit Reached!")
 
     with tab3:
-        st.subheader("📈 Creator Journey (YT/IG)")
-        st.markdown("""
-        <div class="journey-card">
-        <h4>Level 1: The Setup</h4>
-        <p>Post 1 reel daily. Use Neo Chat for hooks.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with tab4:
-        st.subheader("💎 Pro Membership")
         st.markdown(f"""
-        <div style="border: 1px solid #EEE; padding: 20px; border-radius: 15px; text-align: center;">
+        <div style="border: 1px solid #EEE; padding: 20px; border-radius: 10px; text-align: center;">
             <h3>Pro Access - ₹49</h3>
-            <p>15+ Viral Thumbnails & Roadmap</p>
-            {f'<a href="{get_upi_link(49, "NeoPro")}" class="btn-redirect">Pay via UPI</a>' if not st.session_state.is_master else '<b>MASTER ACCESS ACTIVE</b>'}
+            <p>15+ Viral Thumbnails Monthly</p>
+            <a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=NeoPro_{st.session_state.user_email}" class="btn-redirect">Pay via UPI</a>
         </div>
         """, unsafe_allow_html=True)
