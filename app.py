@@ -1,122 +1,120 @@
 import streamlit as st
+import time  # <--- Ye line missing thi, ab fix ho gayi hai
 
 # --- 1. SETTINGS & UI ---
-st.set_page_config(page_title="Neo AI - Learning Hub", page_icon="🎓", layout="wide")
+st.set_page_config(page_title="Neo AI - Masterclass Hub", page_icon="🎓", layout="wide")
 
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #ffffff; }
-    .level-box { background: #111; padding: 20px; border-radius: 15px; border: 1px solid #222; margin-bottom: 10px; }
-    .lock-icon { color: #555; font-size: 14px; }
-    .unlock-icon { color: #00f2fe; font-size: 14px; font-weight: bold; }
-    .video-container { border: 2px solid #00f2fe; border-radius: 15px; overflow: hidden; margin-bottom: 20px; }
-    .quiz-container { background: #1a1a1a; padding: 20px; border-radius: 12px; border-left: 5px solid #ff4b4b; }
+    .main-title { text-align: center; font-size: 3rem; font-weight: 800; background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 10px; }
+    .course-card { border: 1px solid #1e1e1e; padding: 20px; border-radius: 15px; background: #111111; transition: 0.3s; margin-bottom: 15px; }
+    .course-card:hover { border-color: #00f2fe; }
+    .tutorial-step { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #00f2fe; }
+    .quiz-container { background: #0e1117; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-top: 20px; }
+    .btn-pay { display: block; background: #00f2fe; color: black !important; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 15px; }
+    .creator-badge { background: #238636; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SESSION STATE (For Progress Tracking) ---
+# --- 2. SESSION STATE ---
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
-if "current_level" not in st.session_state: st.session_state.current_level = 1
-if "score" not in st.session_state: st.session_state.score = 0
+if "user_email" not in st.session_state: st.session_state.user_email = ""
 if "is_paid" not in st.session_state: st.session_state.is_paid = False
+if "current_level" not in st.session_state: st.session_state.current_level = 1
+if "active_tab" not in st.session_state: st.session_state.active_tab = "Social Media"
 
-# --- 3. COURSE CONTENT (Videos & Quizzes) ---
-# Yahan aap apni YouTube video links aur Quizzes add kar sakte hain
-COURSE_DATA = {
-    1: {
-        "title": "Level 1: The Viral Psychology",
-        "video": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", # Replace with your tutorial link
-        "lesson": "Is video mein sikhein kaise audience ke dimaag se khel kar hooks banate hain.",
-        "quiz_q": "Viral hone ke liye video ke pehle ___ seconds sabse zaroori hain?",
-        "quiz_a": ["10 Seconds", "3 Seconds", "30 Seconds"],
-        "correct": "3 Seconds"
-    },
-    2: {
-        "title": "Level 2: Advanced Editing Hacks",
-        "video": "https://www.youtube.com/watch?v=your_video_2",
-        "lesson": "CapCut aur VN mein professional keyframing kaise karein.",
-        "quiz_q": "Smooth motion ke liye kis tool ka use hota hai?",
-        "quiz_a": ["Filters", "Keyframes", "Crop"],
-        "correct": "Keyframes"
-    }
+# --- 3. DATA & LEVELS ---
+SOCIAL_LEVELS = {
+    1: {"title": "L1: Viral Psychology", "q": "Viral video ke pehle 3 seconds ko kya kehte hain?", "a": ["Ending", "Hook", "Mid-roll"], "correct": "Hook"},
+    2: {"title": "L2: Algorithm Secrets", "q": "Koshish karein ki aapka Watch-time kitne % se upar ho?", "a": ["20%", "40%", "70%"], "correct": "70%"},
+    3: {"title": "L3: High-End Editing", "q": "Moving objects ko track karne ke liye kya use hota hai?", "a": ["Filter", "Keyframe", "Crop"], "correct": "Keyframe"}
 }
 
-# --- 4. LOGIN & PAYMENT GATE ---
-if not st.session_state.logged_in:
-    st.title("🛡️ Neo AI Masterclass")
-    email = st.text_input("Enter Email")
-    code = st.text_input("Creator Code (Optional)", type="password")
-    if st.button("Start My Journey"):
-        if "@" in email:
-            st.session_state.logged_in = True
-            if code == "NEO_CREATOR_2026": st.session_state.is_paid = True
-            st.rerun()
+CODING_DATA = {
+    "Python": ["Syntax", "Automation", "AI Intro"], "JS": ["DOM", "React", "APIs"],
+    "Java": ["OOPs", "Spring"], "C++": ["DSA", "Game Dev"], "Swift": ["iOS Apps"],
+    "Kotlin": ["Android"], "PHP": ["Laravel"], "Rust": ["Safety"], "Go": ["Cloud"], "Ruby": ["Rails"]
+}
 
-# --- 5. MAIN LEARNING DASHBOARD ---
+# --- 4. LOGIN & AUTH ---
+if not st.session_state.logged_in:
+    st.markdown('<div class="main-title">NEO AI ACADEMY</div>', unsafe_allow_html=True)
+    _, col_mid, _ = st.columns([1, 1.5, 1])
+    with col_mid:
+        email = st.text_input("Enter Email")
+        code = st.text_input("Creator Code (Optional)", type="password")
+        if st.button("Start Journey 🚀", use_container_width=True):
+            if "@" in email:
+                st.session_state.logged_in = True
+                st.session_state.user_email = email
+                if code == "NEO_CREATOR_2026": st.session_state.is_paid = True
+                st.rerun()
+            else: st.error("Valid email please.")
+
+# --- 5. MAIN DASHBOARD ---
 else:
     with st.sidebar:
         st.title("Neo Coach 🤖")
-        st.markdown(f"**Level Reached:** {st.session_state.current_level}")
-        if not st.session_state.is_paid:
-            st.warning("Locked: Pay ₹49 for Full Access")
-        else:
-            st.success("Elite Access Unlocked ✅")
-        
+        st.write(f"Logged: {st.session_state.user_email}")
+        if st.session_state.is_paid: st.markdown('<span class="creator-badge">CREATOR ACCESS ACTIVE</span>', unsafe_allow_html=True)
+        st.divider()
+        st.session_state.active_tab = st.selectbox("Switch Department", ["Social Media", "Coding Academy"])
         if st.button("🔴 Logout"):
             st.session_state.logged_in = False
             st.rerun()
 
-    # --- COURSE INTERFACE ---
-    st.title("🚀 Social Media Mastery")
-    
-    # Levels Sidebar/Buttons
-    cols = st.columns(len(COURSE_DATA))
-    for i, lvl in enumerate(COURSE_DATA):
-        with cols[i]:
-            if st.session_state.current_level >= lvl:
-                if st.button(f"✅ Level {lvl}", use_container_width=True):
-                    pass # Current level active
-            else:
-                st.button(f"🔒 Level {lvl}", disabled=True, use_container_width=True)
-
-    st.divider()
-
-    # --- ACTIVE LEVEL CONTENT ---
-    curr = st.session_state.current_level
-    if curr in COURSE_DATA:
-        data = COURSE_DATA[curr]
+    # --- DEPARTMENT 1: SOCIAL MEDIA (LEVELS & QUIZ) ---
+    if st.session_state.active_tab == "Social Media":
+        st.title("🚀 Social Media Masterclass")
         
-        # Payment Check
-        if not st.session_state.is_paid and curr > 1:
-            st.error("Aage badhne ke liye course unlock karein!")
-            st.markdown(f"""
-                <div style="text-align: center; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #00f2fe;">
-                    <h3>Unlock Advanced Levels</h3>
-                    <p>Get Master Notes + All Video Tutorials</p>
-                    <a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=Masterclass" 
-                       style="background:#00f2fe; color:black; padding:12px 25px; text-decoration:none; border-radius:8px; font-weight:bold;">PAY ₹49 NOW</a>
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            # Video Player
-            st.subheader(data["title"])
-            st.video(data["video"])
-            st.info(data["lesson"])
-
-            # Quiz Section
-            st.markdown('<div class="quiz-container">', unsafe_allow_html=True)
-            st.write(f"**Quiz:** {data['quiz_q']}")
-            ans = st.radio("Sahi jawab chunein:", data["quiz_a"], key=f"q_{curr}")
-            
-            if st.button("Submit Answer & Next Level"):
-                if ans == data["correct"]:
-                    st.success("Sahi Jawab! Agla Level Unlock Ho Gaya.")
-                    st.session_state.current_level += 1
-                    time.sleep(1)
-                    st.rerun()
+        # Level Indicators
+        l_cols = st.columns(len(SOCIAL_LEVELS))
+        for i, lvl in enumerate(SOCIAL_LEVELS):
+            with l_cols[i]:
+                if st.session_state.current_level >= lvl:
+                    st.success(SOCIAL_LEVELS[lvl]["title"])
                 else:
-                    st.error("Galat jawab! Video phir se dekhein.")
-            st.markdown('</div>', unsafe_allow_html=True)
+                    st.info(f"🔒 Locked")
+
+        st.divider()
+        curr = st.session_state.current_level
+        if curr in SOCIAL_LEVELS:
+            data = SOCIAL_LEVELS[curr]
+            if not st.session_state.is_paid and curr > 1:
+                st.error("Unlock Masterclass to proceed to Level 2!")
+                st.markdown(f'<a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=Masterclass" class="btn-pay">PAY ₹49 TO UNLOCK ALL LEVELS</a>', unsafe_allow_html=True)
+            else:
+                st.subheader(f"Level {curr}: Tutorial Video")
+                st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Replace with your real tutorial link
+                
+                with st.container():
+                    st.markdown('<div class="quiz-container">', unsafe_allow_html=True)
+                    st.write(f"**Question:** {data['q']}")
+                    ans = st.radio("Choose correct answer:", data["a"], key=f"q{curr}")
+                    if st.button("Submit & Next Level"):
+                        if ans == data["correct"]:
+                            st.success("Sahi Jawab! Next Level Unlocked.")
+                            st.session_state.current_level += 1
+                            time.sleep(1) # <--- Ab Error nahi aayega
+                            st.rerun()
+                        else: st.error("Galat! Video dhyan se dekhein.")
+                    st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.balloons()
+            st.success("Mastery Complete! You are now a Viral Expert.")
+
+    # --- DEPARTMENT 2: CODING ACADEMY ---
     else:
-        st.balloons()
-        st.success("Badhai ho! Aapne pura course complete kar liya hai.")
+        st.title("💻 10 Language Coding Bootcamp")
+        c_cols = st.columns(2)
+        for i, (lang, steps) in enumerate(CODING_DATA.items()):
+            with c_cols[i % 2]:
+                with st.expander(f"🚀 {lang} Roadmap"):
+                    for s in steps:
+                        st.write(f"✅ {s}")
+                    if not st.session_state.is_paid:
+                        st.markdown(f'<a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn={lang}" class="btn-pay">Unlock {lang} Tutorials - ₹49</a>', unsafe_allow_html=True)
+                    else:
+                        st.button(f"Download {lang} Notes (Free for You)")
+
