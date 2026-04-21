@@ -8,17 +8,20 @@ from PIL import Image
 import io
 
 # --- 1. CONFIG & GEMINI SETUP ---
-st.set_page_config(page_title="Neo AI - Professional Suite", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Neo AI - Professional Suite", page_icon="🚀", layout="wide")
 
-# API Key Configuration
-API_KEY = "AIzaSyDQQ7KRmtuJNQbTKHP4qZ6MitGeM01-Pg0AIzaSyCCSYeirnZTfl4AlwdO8HUwg9t805VOkeQ"
+# AAPKI WORKING SINGLE API KEY
+API_KEY = "AIzaSyA1xU_jsLHzAOSAZX_m61b18Z_7CtIDcbU"
 genai.configure(api_key=API_KEY)
 
-# Models Initialization
-# gemini-3.1-pro-preview for UNLIMITED CHAT
-# gemini-2.5-flash-image (Nano Banana) for IMAGES
-chat_model = genai.GenerativeModel('gemini-3.1-pro-preview')
-img_model = genai.GenerativeModel('gemini-2.5-flash-image')
+# Models Initializing
+try:
+    # Chat ke liye: Gemini 1.5 Flash (Fast & Unlimited)
+    chat_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    # Image ke liye: Nano Banana (Gemini 2.5 Flash Image)
+    img_model = genai.GenerativeModel('gemini-2.5-flash-image')
+except Exception as e:
+    st.error(f"Model Configuration Error: {e}")
 
 st.markdown("""
     <style>
@@ -27,7 +30,6 @@ st.markdown("""
     .btn-redirect { display: block; background: #000; color: white !important; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 15px; }
     .premium-badge { color: #10a37f; font-weight: bold; border: 1px solid #10a37f; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
     .design-box { border: 2px dashed #10a37f; padding: 20px; border-radius: 10px; text-align: center; background: #f0fff4; margin-bottom: 20px; }
-    .stChatMessage { border-radius: 10px; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -38,7 +40,7 @@ S_PASS = "wlbyzggcamomaxsw"
 def send_otp_email(rec_email, otp):
     try:
         msg = EmailMessage()
-        msg.set_content(f"Your Neo AI Security Code: {otp}")
+        msg.set_content(f"Your Neo AI Login Code: {otp}")
         msg['Subject'] = "Neo AI Security Code"
         msg['From'] = S_EMAIL
         msg['To'] = rec_email
@@ -57,116 +59,107 @@ if "credits" not in st.session_state: st.session_state.credits = 3
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "master" not in st.session_state: st.session_state.master = False
 
-# --- 4. AUTH GATEWAY ---
+# --- 4. AUTHENTICATION ---
 def show_auth():
     st.markdown("<div class='auth-container'>", unsafe_allow_html=True)
     st.title("🛡️ Neo Access")
     if st.session_state.auth_step == "email_entry":
         email = st.text_input("Enter Email", placeholder="user@gmail.com")
-        if st.button("Get OTP"):
-            if "@" in email:
+        if st.button("Get Security Code"):
+            if "@" in email and "." in email:
                 otp = str(random.randint(111111, 999999))
                 if send_otp_email(email, otp):
                     st.session_state.gen_otp = otp
                     st.session_state.u_email = email
                     st.session_state.auth_step = "otp_verify"
                     st.rerun()
-                else: st.error("Email Error.")
-            else: st.error("Invalid Email.")
+                else: st.error("Email delivery failed.")
+            else: st.error("Please enter a valid email.")
     elif st.session_state.auth_step == "otp_verify":
+        st.info(f"Code sent to {st.session_state.u_email}")
         code = st.text_input("Enter OTP", placeholder="XXXXXX")
-        if st.button("Verify"):
+        if st.button("Log In"):
             if code == st.session_state.gen_otp:
                 st.session_state.auth_step = "verified"
                 st.rerun()
-            else: st.error("Wrong OTP.")
+            else: st.error("Incorrect code.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 5. MAIN APP ---
+# --- 5. MAIN APPLICATION ---
 if st.session_state.auth_step != "verified":
     show_auth()
 else:
+    # Sidebar
     with st.sidebar:
-        st.title("Neo v11.0 Beast 🚀")
-        st.write(f"Logged: {st.session_state.u_email}")
+        st.title("Neo v12.0 Pro 🚀")
+        st.write(f"Account: {st.session_state.u_email}")
         m_key = st.text_input("Master Key", type="password")
         if m_key == "NEO_MASTER_2026":
             st.session_state.master = True
             st.success("MASTER ACTIVE")
+        
         c_val = "∞" if st.session_state.master else st.session_state.credits
-        st.markdown(f'<span class="premium-badge">IMG CREDITS: {c_val}</span>', unsafe_allow_html=True)
-        st.markdown(f'<span class="premium-badge" style="border-color: #000; color: #000;">CHAT: UNLIMITED ♾️</span>', unsafe_allow_html=True)
+        st.markdown(f'<span class="premium-badge">IMAGE CREDITS: {c_val}</span>', unsafe_allow_html=True)
+        st.markdown(f'<span class="premium-badge" style="color:#000;">CHAT: UNLIMITED ♾️</span>', unsafe_allow_html=True)
+        
         if st.button("🔴 Logout"):
             st.session_state.auth_step = "email_entry"
             st.rerun()
 
-    t1, t2, t3 = st.tabs(["🗨️ Neo GPT (Unlimited)", "🖼️ Sketch to Photo", "💎 Pro Upgrade"])
+    t1, t2, t3 = st.tabs(["🗨️ Neo Chat", "🖼️ Sketch to Realistic", "💎 Pro Upgrade"])
 
-    # --- TAB 1: NO LIMIT CHATBOT ---
+    # --- TAB 1: UNLIMITED CHAT ---
     with t1:
-        st.subheader("Neo GPT - Power of Gemini 3.1 Pro")
+        st.subheader("Neo GPT Chat")
+        for msg in st.session_state.chat_history:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
         
-        # Clear Chat Button
-        if st.button("🗑️ Clear Chat"):
-            st.session_state.chat_history = []
-            st.rerun()
-
-        # Display Chat
-        for message in st.session_state.chat_history:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        # Chat Input
-        if prompt := st.chat_input("Baat karo Beast se..."):
+        if prompt := st.chat_input("Ask Neo anything..."):
             st.session_state.chat_history.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
-
+            
             with st.chat_message("assistant"):
-                message_placeholder = st.empty()
                 try:
-                    # Requesting Gemini 3.1 Pro for NO LIMIT Chat
                     response = chat_model.generate_content(prompt)
-                    full_response = response.text
-                    # Typewriter effect
-                    curr_text = ""
-                    for char in full_response:
-                        curr_text += char
-                        message_placeholder.markdown(curr_text + "▌")
-                        time.sleep(0.005)
-                    message_placeholder.markdown(full_response)
-                    st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                    st.markdown(response.text)
+                    st.session_state.chat_history.append({"role": "assistant", "content": response.text})
                 except Exception as e:
                     st.error(f"Chat Error: {e}")
 
     # --- TAB 2: SKETCH TO PHOTO ---
     with t2:
-        st.subheader("🖼️ Realistic Transformation (Nano Banana 2)")
-        up_sketch = st.file_uploader("Upload Sketch", type=["jpg", "png", "jpeg"])
-        p_desc = st.text_area("Transformation Style", placeholder="e.g. Turn this sketch into a photorealistic 4K cinematic image.")
+        st.subheader("🖼️ Realistic Transformation")
+        st.markdown('<div class="design-box">Upload a sketch and describe the final look!</div>', unsafe_allow_html=True)
+        up_img = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+        details = st.text_area("Style/Details", "Make it a 4K photorealistic cinematic image.")
         
-        if st.button("Generate Transformation"):
-            if (st.session_state.credits > 0 or st.session_state.master) and up_sketch and p_desc:
-                with st.spinner("🤖 Drawing..."):
+        if st.button("Transform Sketch"):
+            if (st.session_state.credits > 0 or st.session_state.master) and up_img:
+                with st.spinner("🤖 AI Reimagining..."):
                     try:
-                        img = Image.open(up_sketch)
-                        response = img_model.generate_content([img, f"Transform this sketch: {p_desc}"])
-                        if response:
+                        img = Image.open(up_img)
+                        # Calling Nano Banana
+                        res = img_model.generate_content([img, f"Transform this sketch: {details}"])
+                        if res:
                             if not st.session_state.master: st.session_state.credits -= 1
                             col1, col2 = st.columns(2)
-                            with col1: st.image(img, caption="Sketch", use_container_width=True)
-                            with col2: st.image(response.generated_image, caption="AI Result", use_container_width=True)
+                            with col1: st.image(img, caption="Original", use_container_width=True)
+                            with col2: st.image(res.generated_image, caption="AI Result", use_container_width=True)
+                            st.success("Transformation Complete!")
                     except Exception as e:
-                        st.error(f"Error: {e}")
-            elif not up_sketch: st.error("Image upload karein!")
-            else: st.error("No Credits Left for Images!")
+                        st.error(f"Image Generation Error: {e}")
+            elif not up_img: st.error("Please upload a sketch image first.")
+            else: st.error("No credits remaining for images.")
 
-    # --- TAB 3: PRO ---
+    # --- TAB 3: PRO UPGRADE ---
     with t3:
         st.markdown(f"""
         <div style="border: 1px solid #EEE; padding: 25px; border-radius: 15px; text-align: center;">
             <h3>Neo Pro Upgrade - ₹49</h3>
-            <p>Unlimited Image Generations & Early Access</p>
+            <p>Unlimited Nano Banana Image Processing & High-Speed Access</p>
             <a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=NeoPro" class="btn-redirect">Pay via UPI</a>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">Instant account upgrade after verification.</p>
         </div>
         """, unsafe_allow_html=True)
