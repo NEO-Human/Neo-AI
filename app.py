@@ -1,110 +1,124 @@
 import streamlit as st
+import time
 import google.generativeai as genai
 
-# --- 1. SETTINGS & PREMIUM BEAST THEME ---
-st.set_page_config(page_title="Neo AI - Beast Mode", page_icon="🧠", layout="wide")
+# --- 1. CONFIG & THEME ---
+st.set_page_config(page_title="Neo AI - SaaS Edition", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
-    /* Main Background & Fonts */
-    .stApp { background-color: #FFFFFF; color: #1A1A1B; }
-    
-    /* Sidebar Styling */
-    section[data-testid="stSidebar"] { background-color: #F8F9FA !important; border-right: 1px solid #E5E7EB; }
-    
-    /* Beast Response Styling */
-    .beast-response { 
-        border-left: 5px solid #000000; 
-        padding: 20px; 
-        background: #F9FAFB; 
-        border-radius: 0 12px 12px 0; 
-        margin-bottom: 25px;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
-    }
-    .next-move-box { 
-        background: #DCFCE7; 
-        color: #15803D; 
-        padding: 15px; 
-        border-radius: 8px; 
-        border: 1px solid #15803D; 
-        font-weight: bold;
-        margin-top: 15px;
-    }
-    
-    /* Premium Store Cards */
-    .premium-card {
-        border: 1px solid #E5E7EB;
-        padding: 20px;
-        border-radius: 15px;
-        background: #FFFFFF;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-    }
-    .price-tag { color: #10a37f; font-weight: bold; font-size: 26px; }
-    
-    /* Action Buttons */
-    .btn-redirect {
-        display: block;
-        background-color: #000000;
-        color: white !important;
-        padding: 12px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        text-align: center;
-        margin-top: 10px;
-    }
-    .master-badge { color: #10a37f; font-weight: bold; border: 1px solid #10a37f; padding: 5px; border-radius: 5px; text-align: center; }
+    .stApp { background-color: #FFFFFF; }
+    .stChatMessage { border-radius: 12px; margin-bottom: 10px; border: 1px solid #F3F4F6; }
+    .auth-box { max-width: 400px; margin: auto; padding: 30px; border: 1px solid #EEE; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .premium-badge { color: #10a37f; font-weight: bold; border: 1px solid #10a37f; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+    .btn-buy { display: block; background: #000; color: white !important; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 15px; }
+    .thumb-preview { border: 2px dashed #D1D5DB; border-radius: 10px; padding: 20px; text-align: center; background: #F9FAFB; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. CONFIGURATION & LOGIC ---
-# Replace with your actual Gemini API Key
-# genai.configure(api_key="YOUR_GEMINI_API_KEY")
+# --- 2. INITIALIZE DATABASE ---
+if "auth" not in st.session_state: st.session_state.auth = False
+if "thumbs_left" not in st.session_state: st.session_state.thumbs_left = 3
+if "chat_history" not in st.session_state: st.session_state.chat_history = []
 
-UPI_ID = "9665145228-2@axl"
-PAYEE_NAME = "Neo AI Creator"
-
-def get_upi_link(amount, note):
-    return f"upi://pay?pa={UPI_ID}&pn={PAYEE_NAME}&am={amount}&cu=INR&tn={note}"
-
-# --- 3. SIDEBAR CONTROL ---
-with st.sidebar:
-    st.title("Neo v4.0 Beast 🚀")
-    user_name = st.text_input("Identify Yourself", placeholder="Name")
-    master_key = st.text_input("Master Key", type="password", placeholder="Secret Key")
+# --- 3. LOGIN / OTP SYSTEM ---
+def show_login():
+    st.markdown("<div class='auth-box'>", unsafe_allow_html=True)
+    st.title("🔐 Neo Secure Access")
+    email = st.text_input("Email ID", placeholder="example@gmail.com")
+    password = st.text_input("Set Password", type="password")
+    otp = st.text_input("OTP (Sent to Email)", placeholder="Enter 4-digit OTP")
     
-    is_master = False
-    if master_key == "NEO_MASTER_2026":
-        is_master = True
-        st.markdown('<div class="master-badge">🔓 MASTER ACCESS ACTIVE</div>', unsafe_allow_html=True)
-    
-    st.markdown("---")
-    if st.button("➕ New Beast Session"):
-        st.session_state.messages = []
-        st.rerun()
+    if st.button("Verify & Enter Neo"):
+        if email and len(password) >= 6 and otp == "1234": # Demo OTP '1234'
+            st.session_state.auth = True
+            st.session_state.user_email = email
+            st.rerun()
+        else:
+            st.error("Invalid Details. Use OTP: 1234")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.write("💰 **Direct Support**")
-    st.markdown(f'<a href="tel:9665145228" class="btn-redirect">📞 Call Creator</a>', unsafe_allow_html=True)
-
-# --- 4. MAIN APP LOGIC ---
-if not user_name:
-    st.title("Welcome to Neo Intelligence")
-    st.subheader("The World's Cleanest AI Beast.")
-    st.write("Enter your name in the sidebar to start the 10x Intelligence experience.")
-    st.image("https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1000")
+# --- 4. MAIN BEAST APP ---
+if not st.session_state.auth:
+    show_login()
 else:
-    if "messages" not in st.session_state: st.session_state.messages = []
-    
-    tab1, tab2, tab3 = st.tabs(["🗨️ Beast Chat", "💎 Premium Store", "📊 Intelligence"])
+    # --- Sidebar ---
+    with st.sidebar:
+        st.title("Neo v5.0 Pro 🚀")
+        st.write(f"👤 User: **{st.session_state.user_email}**")
+        st.markdown(f'<span class="premium-badge">FREE THUMBNAILS: {st.session_state.thumbs_left}</span>', unsafe_allow_html=True)
+        st.markdown("---")
+        if st.button("🔴 Logout"):
+            st.session_state.auth = False
+            st.rerun()
+        st.write("💰 **UPI:** `9665145228-2@axl`")
 
-    # --- TAB 1: BEAST CHAT (DETAILED ANSWERS) ---
+    tab1, tab2, tab3 = st.tabs(["🗨️ GPT Streaming Chat", "🎥 Thumbnail Generator", "💎 Premium Access"])
+
+    # --- TAB 1: STREAMING CHAT (GPT STYLE) ---
     with tab1:
-        st.markdown(f"### Active Session: {user_name}")
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"]): st.markdown(msg["content"], unsafe_allow_html=True)
+        st.subheader("Neo Deep Intelligence")
+        for chat in st.session_state.chat_history:
+            with st.chat_message(chat["role"]): st.markdown(chat["content"])
+        
+        if prompt := st.chat_input("Ask anything to the Beast..."):
+            st.session_state.chat_history.append({"role": "user", "content": prompt})
+            with st.chat_message("user"): st.markdown(prompt)
+            
+            with st.chat_message("assistant"):
+                # Simulation of Gemini Response with Step-by-Step Flow
+                full_text = f"""### 🚀 THE CORE ROADMAP
+                Aapka sawal "{prompt}" bahut interesting hai. Neo iska deep analysis kar raha hai:
+
+                1. **Market Fact:** Is topic par abhi competition low hai aur demand 45% up hai.
+                2. **Execution:** Sabse pehle aapko data collect karke execution start karni hogi.
+                3. **Scaling:** Neo API use karke aap ise 10x scale kar sakte hain.
+
+                🏁 **NEXT MOVE:** Thumbnail tab mein jaakar ek viral image generate karein!"""
+                
+                placeholder = st.empty()
+                typed_msg = ""
+                # Word-by-word streaming effect
+                for word in full_text.split(" "):
+                    typed_msg += word + " "
+                    placeholder.markdown(typed_msg + "▌")
+                    time.sleep(0.07)
+                placeholder.markdown(typed_msg)
+                st.session_state.chat_history.append({"role": "assistant", "content": typed_msg})
+
+    # --- TAB 2: THUMBNAIL MAKER (FREE LIMIT) ---
+    with tab2:
+        st.subheader("🖼️ YouTube Viral Thumbnail Maker")
+        topic = st.text_input("Video Topic / Title", placeholder="Ex: Earn 1 Lakh with AI")
+        
+        if st.button("Generate AI Thumbnail"):
+            if st.session_state.thumbs_left > 0:
+                with st.spinner("Neo Beast is designing..."):
+                    time.sleep(2.5)
+                    st.session_state.thumbs_left -= 1
+                    st.image("https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800", 
+                             caption=f"Preview for: {topic}")
+                    st.success(f"Success! {st.session_state.thumbs_left} free generations left.")
+            else:
+                st.error("Free Limit Exhausted! Please upgrade for 15+ thumbnails.")
+
+    # --- TAB 3: SUBSCRIPTION & PRO ---
+    with tab3:
+        st.subheader("💎 Unlock Unlimited Beast Potential")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""<div class='auth-box'>
+                <h3>Pro Access</h3>
+                <p>✅ 15+ Thumbnails</p>
+                <p>✅ Real-time Trends</p>
+                <h2 style='color:#10a37f;'>₹49 / Month</h2>
+                </div>""", unsafe_allow_html=True)
+            upi_link = "upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=NeoProAccess"
+            st.markdown(f'<a href="{upi_link}" class="btn-buy">Buy via UPI App</a>', unsafe_allow_html=True)
+            
+        with col2:
+            st.info("💡 **Kaise kaam karega?**\n\nPayment karne ke baad Neo Pro apne aap detect nahi hoga (kyunki ye direct UPI hai). Aapko 'Call Creator' par click karke screenshot dena hoga, aur main aapko ek **Permanent Master Key** de dunga.")
         
         if prompt := st.chat_input("Ask the Beast for a Roadmap..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
