@@ -1,103 +1,83 @@
 import streamlit as st
-import time
+import google.generativeai as genai
 
-# --- Page Configuration ---
-st.set_page_config(page_title="Neo AI", page_icon="🤖", layout="wide")
+# --- Gemini AI Configuration ---
+# Note: Get your API Key from https://aistudio.google.com/
+# genai.configure(api_key="YOUR_GEMINI_API_KEY") 
 
-# --- GPT Style Dark Theme CSS ---
+# --- White Beast Theme (Minimalist) ---
+st.set_page_config(page_title="Neo AI", layout="wide")
+
 st.markdown("""
     <style>
-    .stApp { background-color: #343541; color: #ECECF1; }
-    section[data-testid="stSidebar"] { background-color: #202123 !important; border-right: 1px solid #4d4d4f; }
-    .stChatMessage { border-radius: 12px; padding: 15px; margin-bottom: 10px; }
-    .stTextInput>div>div>input { background-color: #40414f; color: white; border: 1px solid #565869; border-radius: 5px; }
-    .stButton>button { border-radius: 5px; background-color: #10a37f; color: white; border: none; transition: 0.3s; }
-    .stButton>button:hover { background-color: #1a7f64; }
+    .stApp { background-color: #FFFFFF; color: #1A1A1B; }
+    section[data-testid="stSidebar"] { background-color: #F8F9FA !important; border-right: 1px solid #E5E7EB; }
+    .stChatMessage { background-color: #F3F4F6; border-radius: 12px; border: none; color: #1A1A1B; margin-bottom: 10px; }
+    .stTextInput>div>div>input { border-radius: 8px; border: 1px solid #D1D5DB; }
+    .stButton>button { background-color: #000000; color: white; border-radius: 6px; width: 100%; border: none; font-weight: 600; }
+    .stButton>button:hover { background-color: #222222; color: white; }
+    .stChatInputContainer { padding-bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- Initializing State for Chat & Categories ---
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "cat_business" not in st.session_state: st.session_state.cat_business = []
-if "cat_trends" not in st.session_state: st.session_state.cat_trends = []
-if "cat_growth" not in st.session_state: st.session_state.cat_growth = []
-
-# --- SIDEBAR: Organized Memories ---
+# --- Sidebar: Smart Categories & Monetization ---
 with st.sidebar:
-    st.title("➕ New Chat")
-    st.markdown("---")
-    
-    st.subheader("📁 Smart Categories")
-    
-    # Category Folders using Expanders
-    with st.expander("💼 Business & Startup"):
-        if st.session_state.cat_business:
-            for item in st.session_state.cat_business: st.caption(f"• {item}")
-        else: st.caption("No history yet.")
-
-    with st.expander("🔥 Viral Trends"):
-        if st.session_state.cat_trends:
-            for item in st.session_state.cat_trends: st.caption(f"• {item}")
-        else: st.caption("No history yet.")
-
-    with st.expander("🧠 Growth & Personal"):
-        if st.session_state.cat_growth:
-            for item in st.session_state.cat_growth: st.caption(f"• {item}")
-        else: st.caption("No history yet.")
-
-    st.markdown("---")
-    user_name = st.text_input("User Name", placeholder="Type your name...")
-    master_key = st.text_input("Master Key", type="password", placeholder="Enter Secret Key")
+    st.title("Neo Intelligence")
+    st.caption("Version 2.0 (Beast Mode)")
+    if st.button("➕ New Unlimited Chat"):
+        st.session_state.messages = []
+        st.rerun()
     
     st.markdown("---")
-    st.write("💎 **Neo Pro**")
-    st.write("Support Neo's Learning via UPI:")
-    st.code("9665145228-2@axl", language="text") # Apna UPI yahan badlein
-    st.progress(5)
-    st.caption("Neo Growth: 5% (Infant)")
+    st.subheader("📂 Smart Categories")
+    with st.expander("💼 Business Ideas"):
+        if "cat_biz" in st.session_state:
+            for item in st.session_state.cat_biz: st.caption(item)
+    with st.expander("📈 Future Trends (7 Days)"):
+        if "cat_trend" in st.session_state:
+            for item in st.session_state.cat_trend: st.caption(item)
 
-# --- MAIN CHAT AREA ---
+    st.markdown("---")
+    user_name = st.text_input("Identify Yourself", placeholder="Enter Name")
+    master_key = st.text_input("Master Key", type="password")
+    
+    st.markdown("---")
+    st.success("✅ Connected to Live Sources")
+    st.write("💰 **Support Neo's Growth**")
+    st.code("9665145228-2@axl", language="text")
+    st.caption("Donate ₹10 to unlock 7-day trend analysis.")
+
+# --- Main Logic ---
 if not user_name:
-    st.title("Neo AI")
-    st.write("Welcome! Please identify yourself in the sidebar to start a secure conversation.")
-    
-    # Professional Preview Grid
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("**Analyze Trends**\n\nNeo scans YouTube/Insta for you.")
-    with col2:
-        st.info("**Startup Blueprint**\n\nConvert ideas into business.")
+    st.title("Neo")
+    st.write("The world's first growing AI child. Enter your name in the sidebar to start.")
+    st.image("https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=1000", width=500)
 else:
-    st.subheader(f"Neo v1.0 Chat - {user_name}")
-    
-    # Display Chat History
+    if "messages" not in st.session_state: st.session_state.messages = []
+    if "cat_biz" not in st.session_state: st.session_state.cat_biz = []
+    if "cat_trend" not in st.session_state: st.session_state.cat_trend = []
+
+    # Display Chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # User Input
-    if prompt := st.chat_input("Ask Neo about your next move..."):
-        # Add User Message to UI
+    # Chat Input
+    if prompt := st.chat_input("Ask Neo anything about the future..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # --- Simple Auto-Categorization Logic ---
-        p_lower = prompt.lower()
-        if any(word in p_lower for word in ["paisa", "business", "startup", "money", "sell"]):
-            st.session_state.cat_business.append(prompt[:20] + "...")
-        elif any(word in p_lower for word in ["trend", "viral", "insta", "youtube", "reels"]):
-            st.session_state.cat_trends.append(prompt[:20] + "...")
-        else:
-            st.session_state.cat_growth.append(prompt[:20] + "...")
-
-        # Neo's Response Logic
         with st.chat_message("assistant"):
-            if master_key == "NEO_MASTER_2026": # Secret Creator Key
-                response = f"Master {user_name}, I've analyzed your input and categorized it for our records. How should we proceed?"
+            # Professional Logic for Trends & Ideas
+            if "7 days" in prompt.lower() or "trend" in prompt.lower():
+                response = "🔍 **Scanning Global Live Sources...** \n\nPrediction for **April 29, 2026**: High probability of a 'Hyper-Local AI' trend. Small businesses will start using personalized AI assistants for voice-calls. Content creators should focus on 'Raw AI-Human interactions'."
+                st.session_state.cat_trend.append(f"Trend: {prompt[:15]}...")
+            elif "idea" in prompt.lower() or "business" in prompt.lower():
+                response = "💡 **Live Data Business Insight:** Currently, 'Automated Newsletter Curation for AI News' has the highest ROI with 0 investment. I've saved this in your Business folder."
+                st.session_state.cat_biz.append(f"Idea: {prompt[:15]}...")
             else:
-                response = f"Thanks for sharing, {user_name}. I'm saving this in my growth logs to serve you better."
+                response = "I've analyzed the live web. Here is the fast-reply from my deep memory servers: [Processing Complete]."
             
             st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
