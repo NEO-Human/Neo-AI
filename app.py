@@ -2,83 +2,97 @@ import streamlit as st
 import time
 import google.generativeai as genai
 
-# --- 1. CONFIG & THEME ---
-st.set_page_config(page_title="Neo AI - SaaS Edition", page_icon="🛡️", layout="wide")
+# --- 1. CONFIG & BEAST THEME ---
+st.set_page_config(page_title="Neo AI - Secure SaaS", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF; }
-    .stChatMessage { border-radius: 12px; margin-bottom: 10px; border: 1px solid #F3F4F6; }
-    .auth-box { max-width: 400px; margin: auto; padding: 30px; border: 1px solid #EEE; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .premium-badge { color: #10a37f; font-weight: bold; border: 1px solid #10a37f; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+    .auth-container { max-width: 500px; margin: auto; padding: 40px; border-radius: 20px; border: 1px solid #EEE; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+    .stChatMessage { border-radius: 12px; margin-bottom: 10px; }
     .btn-buy { display: block; background: #000; color: white !important; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 15px; }
-    .thumb-preview { border: 2px dashed #D1D5DB; border-radius: 10px; padding: 20px; text-align: center; background: #F9FAFB; }
+    .premium-badge { color: #10a37f; font-weight: bold; border: 1px solid #10a37f; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. INITIALIZE DATABASE ---
-if "auth" not in st.session_state: st.session_state.auth = False
+# --- 2. DATABASE INITIALIZATION ---
+if "is_verified" not in st.session_state: st.session_state.is_verified = False
+if "otp_sent" not in st.session_state: st.session_state.otp_sent = False
 if "thumbs_left" not in st.session_state: st.session_state.thumbs_left = 3
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 
-# --- 3. LOGIN / OTP SYSTEM ---
-def show_login():
-    st.markdown("<div class='auth-box'>", unsafe_allow_html=True)
-    st.title("🔐 Neo Secure Access")
-    email = st.text_input("Email ID", placeholder="example@gmail.com")
-    password = st.text_input("Set Password", type="password")
-    otp = st.text_input("OTP (Sent to Email)", placeholder="Enter 4-digit OTP")
+# --- 3. SECURE AUTHENTICATION SYSTEM ---
+def show_auth_gate():
+    st.markdown("<div class='auth-container'>", unsafe_allow_html=True)
+    st.title("🛡️ Neo Secure Login")
+    st.write("One Email. One Account. Unlimited Beast Power.")
     
-    if st.button("Verify & Enter Neo"):
-        if email and len(password) >= 6 and otp == "1234": # Demo OTP '1234'
-            st.session_state.auth = True
-            st.session_state.user_email = email
-            st.rerun()
-        else:
-            st.error("Invalid Details. Use OTP: 1234")
+    email = st.text_input("Enter your Email", placeholder="yourname@gmail.com")
+    
+    if email:
+        if not st.session_state.otp_sent:
+            if st.button("Generate & Send OTP"):
+                # Yahan hum OTP send karne ka simulation kar rahe hain
+                with st.spinner("Sending OTP to " + email + "..."):
+                    time.sleep(1.5)
+                    st.session_state.otp_sent = True
+                    st.success("OTP Sent! Check your inbox (Demo: 1234)")
+                    st.rerun()
+        
+        if st.session_state.otp_sent:
+            otp_input = st.text_input("Enter 4-Digit OTP", placeholder="1234")
+            password = st.text_input("Set Account Password", type="password")
+            
+            if st.button("Verify & Access Neo"):
+                if otp_input == "1234" and len(password) >= 6:
+                    st.session_state.is_verified = True
+                    st.session_state.user_email = email
+                    st.success("Authentication Successful!")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("Invalid OTP or Password too short.")
+    
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 4. MAIN BEAST APP ---
-if not st.session_state.auth:
-    show_login()
+# --- 4. MAIN APP CONTENT ---
+if not st.session_state.is_verified:
+    show_auth_gate()
 else:
     # --- Sidebar ---
     with st.sidebar:
-        st.title("Neo v5.0 Pro 🚀")
-        st.write(f"👤 User: **{st.session_state.user_email}**")
+        st.title("Neo v5.5 Pro 🚀")
+        st.write(f"Logged in as: **{st.session_state.user_email}**")
         st.markdown(f'<span class="premium-badge">FREE THUMBNAILS: {st.session_state.thumbs_left}</span>', unsafe_allow_html=True)
         st.markdown("---")
-        if st.button("🔴 Logout"):
-            st.session_state.auth = False
+        if st.button("🔴 Logout / Switch Account"):
+            st.session_state.is_verified = False
+            st.session_state.otp_sent = False
             st.rerun()
         st.write("💰 **UPI:** `9665145228-2@axl`")
 
-    tab1, tab2, tab3 = st.tabs(["🗨️ GPT Streaming Chat", "🎥 Thumbnail Generator", "💎 Premium Access"])
+    tab1, tab2, tab3 = st.tabs(["🗨️ Beast Chat", "🖼️ Thumbnail Maker", "💎 Buy 15+ Access"])
 
-    # --- TAB 1: STREAMING CHAT (GPT STYLE) ---
+    # --- TAB 1: STREAMING CHAT ---
     with tab1:
-        st.subheader("Neo Deep Intelligence")
+        st.subheader("Real-time AI Intelligence")
         for chat in st.session_state.chat_history:
             with st.chat_message(chat["role"]): st.markdown(chat["content"])
         
-        if prompt := st.chat_input("Ask anything to the Beast..."):
+        if prompt := st.chat_input("Ask Neo for a Step-by-Step Roadmap..."):
             st.session_state.chat_history.append({"role": "user", "content": prompt})
             with st.chat_message("user"): st.markdown(prompt)
             
             with st.chat_message("assistant"):
-                # Simulation of Gemini Response with Step-by-Step Flow
-                full_text = f"""### 🚀 THE CORE ROADMAP
-                Aapka sawal "{prompt}" bahut interesting hai. Neo iska deep analysis kar raha hai:
-
-                1. **Market Fact:** Is topic par abhi competition low hai aur demand 45% up hai.
-                2. **Execution:** Sabse pehle aapko data collect karke execution start karni hogi.
-                3. **Scaling:** Neo API use karke aap ise 10x scale kar sakte hain.
-
-                🏁 **NEXT MOVE:** Thumbnail tab mein jaakar ek viral image generate karein!"""
+                full_text = f"""### 🚀 THE BEAST STRATEGY
+                Aapka sawal "{prompt}" process ho gaya hai.
+                
+                1. **Facts:** Yeh topic market mein top 5% trends mein hai.
+                2. **How-to:** Pehle account setup karein, phir Neo tools se automation lagayein.
+                3. **Next Move:** Thumbnail generate karke launch karein!"""
                 
                 placeholder = st.empty()
                 typed_msg = ""
-                # Word-by-word streaming effect
                 for word in full_text.split(" "):
                     typed_msg += word + " "
                     placeholder.markdown(typed_msg + "▌")
@@ -86,25 +100,32 @@ else:
                 placeholder.markdown(typed_msg)
                 st.session_state.chat_history.append({"role": "assistant", "content": typed_msg})
 
-    # --- TAB 2: THUMBNAIL MAKER (FREE LIMIT) ---
+    # --- TAB 2: THUMBNAIL GENERATOR ---
     with tab2:
-        st.subheader("🖼️ YouTube Viral Thumbnail Maker")
-        topic = st.text_input("Video Topic / Title", placeholder="Ex: Earn 1 Lakh with AI")
+        st.subheader("🎥 Viral Thumbnail Generator")
+        topic = st.text_input("Thumbnail Topic", placeholder="Ex: Earn money while sleeping")
         
-        if st.button("Generate AI Thumbnail"):
+        if st.button("Generate Thumbnail"):
             if st.session_state.thumbs_left > 0:
-                with st.spinner("Neo Beast is designing..."):
-                    time.sleep(2.5)
+                with st.spinner("Beast is designing..."):
+                    time.sleep(2)
                     st.session_state.thumbs_left -= 1
-                    st.image("https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800", 
-                             caption=f"Preview for: {topic}")
-                    st.success(f"Success! {st.session_state.thumbs_left} free generations left.")
+                    st.image("https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800")
+                    st.success(f"Generated! {st.session_state.thumbs_left} free left.")
             else:
-                st.error("Free Limit Exhausted! Please upgrade for 15+ thumbnails.")
+                st.error("Limit Reached! Buy Pro for 15+ thumbnails.")
 
-    # --- TAB 3: SUBSCRIPTION & PRO ---
+    # --- TAB 3: UPGRADE ---
     with tab3:
-        st.subheader("💎 Unlock Unlimited Beast Potential")
+        st.subheader("💎 Unlock Unlimited Potential")
+        st.write("Current Email: " + st.session_state.user_email)
+        st.markdown("""
+        - ✅ 15+ Viral Thumbnails
+        - ✅ Priority GPT-4o Access
+        - ✅ Market Trends Database
+        """)
+        upi_link = f"upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn=NeoPro_{st.session_state.user_email}"
+        st.markdown(f'<a href="{upi_link}" class="btn-buy">Buy 15 Access - ₹49</a>', unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         
         with col1:
