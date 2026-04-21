@@ -1,2 +1,9 @@
 streamlit
 google-generativeai
+python-dotenv
+requests
+pandas
+numpy
+pillow
+openai
+langchain
