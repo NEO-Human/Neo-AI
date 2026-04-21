@@ -1,142 +1,120 @@
 import streamlit as st
-import time
 
 # --- 1. THEME & UI SETUP ---
-st.set_page_config(page_title="Neo AI Elite Academy", page_icon="💎", layout="wide")
+st.set_page_config(page_title="Neo AI - Universal Academy", page_icon="🎓", layout="wide")
 
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #ffffff; }
-    .main-title { text-align: center; font-size: 3.5rem; font-weight: 800; background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 20px; }
-    .course-card { border: 1px solid #1e1e1e; padding: 25px; border-radius: 20px; background: #111111; transition: 0.4s; position: relative; overflow: hidden; }
-    .course-card:hover { border-color: #00f2fe; box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); }
-    .premium-tag { position: absolute; top: 15px; right: 15px; background: #FFD700; color: black; padding: 2px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; }
-    .tutorial-step { background: #1a1a1a; padding: 20px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #00f2fe; }
-    .btn-pay { display: block; background: #00f2fe; color: black !important; padding: 15px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 20px; font-size: 18px; }
-    .btn-pay:hover { background: #4facfe; }
+    .main-title { text-align: center; font-size: 3rem; font-weight: 800; background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 10px; }
+    .course-card { border: 1px solid #1e1e1e; padding: 20px; border-radius: 15px; background: #111111; transition: 0.3s; margin-bottom: 15px; }
+    .course-card:hover { border-color: #00f2fe; }
+    .tutorial-step { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #00f2fe; }
+    .btn-pay { display: block; background: #00f2fe; color: black !important; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 15px; }
+    .free-access { background: #238636; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SESSION CONTROL (FIXED) ---
+# --- 2. SESSION CONTROL ---
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
 if "user_email" not in st.session_state: st.session_state.user_email = ""
 if "active_course" not in st.session_state: st.session_state.active_course = None
+if "free_access" not in st.session_state: st.session_state.free_access = False
 
-# --- 3. ELITE CONTENT DATABASE ---
-ELITE_COURSES = {
-    "Viral Psychological Hooks": {
-        "price": "49",
-        "tag": "SECRET STRATEGY",
-        "intro": "YouTube par koi nahi batata: Audience ke dimaag se kaise khelte hain.",
-        "modules": [
-            {"title": "The Negative Hook", "desc": "Kyun 'Don't do this' wali videos 'Do this' se 10x zyada chalti hain."},
-            {"title": "Open Loop Theory", "desc": "Video ke beech mein loop kaise kholein taaki log end tak rukein."},
-            {"title": "Retention Editing", "desc": "Every 3 seconds change rule - Visual storytelling ka asli sach."},
-            {"title": "Algorithm Trigger", "desc": "Watch-time vs Engagement ka sahi ratio jo video push karta hai."}
-        ],
-        "upi_id": "9665145228-2@axl"
+# --- 3. COURSE DATABASE ---
+DATA = {
+    "📱 Instagram": {
+        "Reels Algorithm Secrets": ["Negative Hook Theory", "Open Loop Storytelling", "Every 3-Sec Visual Change", "Audio Volume Hacking"],
+        "Insta-Brand Growth": ["Profile SEO & Keywords", "Conversion Bio Formula", "Highlight Funnel Setup", "Collaborative Post Strategy"]
     },
-    "High-End Creation Skills": {
-        "price": "49",
-        "tag": "CREATIVE EDGE",
-        "intro": "Mobile se Professional level editing aur Color Grading (CapCut/VN).",
-        "modules": [
-            {"title": "Advanced Masking", "desc": "Clone yourself aur objects ko gayab karne wali professional techniques."},
-            {"title": "Keyframe Mastery", "desc": "Smooth camera movements aur tracking bina gimbal ke."},
-            {"title": "Color Psychology", "desc": "Mood ke hisaab se grading - Viral aesthetic looks kaise banayein."},
-            {"title": "Sound Design", "desc": "SFX layering jo 50% video quality improve kar deti hai."}
-        ],
-        "upi_id": "9665145228-2@axl"
+    "🎥 YouTube": {
+        "Shorts Viral Roadmap": ["Vertical Hook Mastery", "Looping Secrets", "YouTube SEO (Titles/Tags)", "Community Post Triggers"],
+        "Faceless Channel Pro": ["High CPM Niche Selection", "AI Voiceover Excellence", "Stock Footage Sourcing", "Automation Workflow"]
     },
-    "Digital Sales Machine": {
-        "price": "49",
-        "tag": "MONEY MAKING",
-        "intro": "Bina dikhe (Faceless) mahine ka ₹50k+ kaise earn karein.",
-        "modules": [
-            {"title": "Niche Goldmine", "desc": "Kam competition aur high CPM wale topics ki list."},
-            {"title": "AI Automation", "desc": "Script, Voiceover aur Video AI se generate karke automate karna."},
-            {"title": "Affiliate Funnel", "desc": "Instagram bio se passive income generate karne ka setup."},
-            {"title": "Brand Deals", "desc": "Chote accounts par bhi brands ko kaise approach karein."}
-        ],
-        "upi_id": "9665145228-2@axl"
+    "💻 Coding (10 Languages)": {
+        "Python (AI/Data)": ["Syntax Basics", "NumPy & Pandas", "Automation Scripts", "Building Basic AI"],
+        "JavaScript (Web)": ["DOM Manipulation", "ES6+ Features", "React Basics", "API Integration"],
+        "Java (Enterprise)": ["OOPs Concepts", "Spring Boot", "Database (MySQL)", "Microservices"],
+        "C++ (DSA/Game)": ["Pointers & Memory", "Data Structures", "Algorithms", "Unreal Engine Intro"],
+        "Swift (iOS)": ["SwiftUI Layouts", "App Lifecycle", "State Management", "App Store Publishing"],
+        "Kotlin (Android)": ["Jetpack Compose", "Retrofit API", "Material Design", "Room Database"],
+        "PHP (Backend)": ["Server Logic", "Laravel Framework", "MySQL Advanced", "Web Security"],
+        "Rust (Systems)": ["Ownership & Borrowing", "Memory Safety", "Cargo Ecosystem", "Web Assembly"],
+        "Go (Backend/Cloud)": ["Concurrency (Goroutines)", "Interfaces", "Microservices", "Docker/K8s"],
+        "Ruby (Web Apps)": ["Ruby on Rails", "MVC Architecture", "Active Record", "Deployment"]
     }
 }
 
-# --- 4. LOGIN / AUTH ---
+# --- 4. AUTHENTICATION ---
 if not st.session_state.logged_in:
-    st.markdown('<div class="main-title">NEO AI ELITE ACADEMY</div>', unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #888;'>Premium Skills & Viral Strategies at Zero Inflation Price</p>", unsafe_allow_html=True)
-    
+    st.markdown('<div class="main-title">NEO AI ACADEMY</div>', unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 1.5, 1])
     with col_mid:
-        email_input = st.text_input("Student Email", placeholder="Your best email...")
-        if st.button("Unlock Academy 🔓", use_container_width=True):
+        email_input = st.text_input("Enter Student Email", placeholder="yourname@gmail.com")
+        creator_code = st.text_input("Enter Creator/Promo Code (Optional)", type="password")
+        if st.button("Unlock Knowledge 🚀", use_container_width=True):
             if "@" in email_input:
                 st.session_state.logged_in = True
-                st.session_state.user_email = email_input # Yahan email save ho rahi hai
+                st.session_state.user_email = email_input
+                if creator_code == "NEO_CREATOR_2026":
+                    st.session_state.free_access = True
                 st.rerun()
-            else:
-                st.error("Please enter a valid email.")
+            else: st.error("Invalid Email")
 
 # --- 5. DASHBOARD ---
 else:
     with st.sidebar:
-        st.title("Neo Coach 🤖")
-        # Fixed the NameError by using session_state
-        st.markdown(f"**Member:** {st.session_state.user_email}")
+        st.title("Neo AI Tutor 🤖")
+        st.write(f"Logged: {st.session_state.user_email}")
+        if st.session_state.free_access:
+            st.markdown('<span class="free-access">VIP CREATOR ACCESS ACTIVE ✅</span>', unsafe_allow_html=True)
         st.divider()
-        st.write("Current Ranking: #450/10,000 Students")
-        if st.button("Logout"):
+        category = st.selectbox("Select Category", list(DATA.keys()))
+        if st.button("🔴 Logout"):
             st.session_state.logged_in = False
-            st.session_state.user_email = ""
             st.rerun()
 
-    st.markdown('<h2 style="text-align: center;">Pick Your Specialization</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h1 style="color: #00f2fe;">{category} Courses</h1>', unsafe_allow_html=True)
     
-    cols = st.columns(3)
-    for i, (name, data) in enumerate(ELITE_COURSES.items()):
-        with cols[i]:
+    # Filtered Courses Display
+    courses = DATA[category]
+    cols = st.columns(2)
+    for i, (name, content) in enumerate(courses.items()):
+        with cols[i % 2]:
             st.markdown(f"""
             <div class="course-card">
-                <span class="premium-tag">{data['tag']}</span>
                 <h3>{name}</h3>
-                <p style="color: #999; font-size: 14px;">{data['intro']}</p>
-                <h2 style="color: #00f2fe;">₹{data['price']}</h2>
+                <p style="color: #888;">Complete Step-by-Step AI Coach Roadmap</p>
+                <h2 style="color: #00f2fe;">{'FREE' if st.session_state.free_access else '₹49'}</h2>
             </div>
             """, unsafe_allow_html=True)
-            if st.button(f"View Syllabus", key=name, use_container_width=True):
-                st.session_state.active_course = name
+            if st.button(f"Start Learning {name}", key=name):
+                st.session_state.active_course = (name, content)
 
-    # --- COURSE TUTORIALS SECTION ---
+    # --- COURSE DETAILS ---
     if st.session_state.active_course:
         st.divider()
-        selected = st.session_state.active_course
-        course = ELITE_COURSES[selected]
+        c_name, c_steps = st.session_state.active_course
+        st.subheader(f"📖 Roadmap: {c_name}")
         
-        st.markdown(f"<h1 style='color: #00f2fe;'>📖 {selected}</h1>", unsafe_allow_html=True)
+        l_col, r_col = st.columns([2, 1])
+        with l_col:
+            for step in c_steps:
+                st.markdown(f'<div class="tutorial-step">✅ {step}</div>', unsafe_allow_html=True)
         
-        left, right = st.columns([2, 1])
-        
-        with left:
-            st.subheader("Advanced Tutorial Roadmap (Basic to Pro)")
-            for mod in course["modules"]:
+        with r_col:
+            if st.session_state.free_access:
+                st.success("You have full access to Video Tutorials and Assets!")
+                st.button("📥 Download Master Resource Pack")
+            else:
                 st.markdown(f"""
-                <div class="tutorial-step">
-                    <h4>✅ {mod['title']}</h4>
-                    <p style="margin: 0; color: #bbb;">{mod['desc']}</p>
+                <div style="background: #111; padding: 25px; border-radius: 15px; border: 2px solid #00f2fe; text-align: center;">
+                    <h4>Get Private Video Lessons</h4>
+                    <p style="font-size: 14px;">In-depth tutorials & secret templates.</p>
+                    <h1 style="color: #00f2fe;">₹49</h1>
+                    <a href="upi://pay?pa=9665145228-2@axl&pn=NeoAI&am=49&cu=INR&tn={c_name.replace(' ', '')}" class="btn-pay">UNLOCK FULL COURSE</a>
                 </div>
                 """, unsafe_allow_html=True)
 
-        with right:
-            st.markdown(f"""
-            <div style="background: #111; padding: 30px; border-radius: 20px; border: 2px solid #00f2fe; text-align: center;">
-                <h3>Unlock Full Video Tutorials</h3>
-                <p>Get exclusive access to screen-recordings and private assets.</p>
-                <h1 style="color: #00f2fe;">₹49</h1>
-                <a href="upi://pay?pa={course['upi_id']}&pn=NeoAI&am=49&cu=INR&tn={selected.replace(' ', '')}" class="btn-pay">GET FULL ACCESS</a>
-                <p style="margin-top:15px; font-size: 12px; color: #555;">Instant Access after Verification</p>
-            </div>
-            """, unsafe_allow_html=True)
-
     st.divider()
-    st.caption("© 2026 Neo AI Academy - Elite Learning Redefined.")
+    st.caption("Neo AI Academy v16.0 | Professional Digital Learning Hub")
