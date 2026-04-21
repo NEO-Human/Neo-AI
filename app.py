@@ -14,15 +14,15 @@ st.markdown("""
     .tutorial-step { background: #1a1a1a; padding: 20px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #00f2fe; }
     .btn-pay { display: block; background: #00f2fe; color: black !important; padding: 15px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: bold; margin-top: 20px; font-size: 18px; }
     .btn-pay:hover { background: #4facfe; }
-    .sidebar-info { padding: 15px; background: #111; border-radius: 10px; border: 1px solid #222; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SESSION CONTROL ---
+# --- 2. SESSION CONTROL (FIXED) ---
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
+if "user_email" not in st.session_state: st.session_state.user_email = ""
 if "active_course" not in st.session_state: st.session_state.active_course = None
 
-# --- 3. ELITE CONTENT DATABASE (Paid Strategies) ---
+# --- 3. ELITE CONTENT DATABASE ---
 ELITE_COURSES = {
     "Viral Psychological Hooks": {
         "price": "49",
@@ -67,30 +67,32 @@ if not st.session_state.logged_in:
     st.markdown('<div class="main-title">NEO AI ELITE ACADEMY</div>', unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888;'>Premium Skills & Viral Strategies at Zero Inflation Price</p>", unsafe_allow_html=True)
     
-    with st.container():
-        _, col_mid, _ = st.columns([1, 1.5, 1])
-        with col_mid:
-            email = st.text_input("Student Email", placeholder="Your best email...")
-            if st.button("Unlock Academy 🔓", use_container_width=True):
-                if "@" in email:
-                    st.session_state.logged_in = True
-                    st.rerun()
+    _, col_mid, _ = st.columns([1, 1.5, 1])
+    with col_mid:
+        email_input = st.text_input("Student Email", placeholder="Your best email...")
+        if st.button("Unlock Academy 🔓", use_container_width=True):
+            if "@" in email_input:
+                st.session_state.logged_in = True
+                st.session_state.user_email = email_input # Yahan email save ho rahi hai
+                st.rerun()
+            else:
+                st.error("Please enter a valid email.")
 
 # --- 5. DASHBOARD ---
 else:
     with st.sidebar:
         st.title("Neo Coach 🤖")
-        st.markdown(f"**Member:** {email}")
-        st.markdown('<div class="sidebar-info">Status: <b>Elite Access</b></div>', unsafe_allow_html=True)
+        # Fixed the NameError by using session_state
+        st.markdown(f"**Member:** {st.session_state.user_email}")
         st.divider()
         st.write("Current Ranking: #450/10,000 Students")
         if st.button("Logout"):
             st.session_state.logged_in = False
+            st.session_state.user_email = ""
             st.rerun()
 
     st.markdown('<h2 style="text-align: center;">Pick Your Specialization</h2>', unsafe_allow_html=True)
     
-    # Grid for Courses
     cols = st.columns(3)
     for i, (name, data) in enumerate(ELITE_COURSES.items()):
         with cols[i]:
@@ -129,15 +131,12 @@ else:
             st.markdown(f"""
             <div style="background: #111; padding: 30px; border-radius: 20px; border: 2px solid #00f2fe; text-align: center;">
                 <h3>Unlock Full Video Tutorials</h3>
-                <p>Get exclusive access to screen-recordings, asset packs, and private community.</p>
+                <p>Get exclusive access to screen-recordings and private assets.</p>
                 <h1 style="color: #00f2fe;">₹49</h1>
                 <a href="upi://pay?pa={course['upi_id']}&pn=NeoAI&am=49&cu=INR&tn={selected.replace(' ', '')}" class="btn-pay">GET FULL ACCESS</a>
-                <p style="margin-top:15px; font-size: 12px; color: #555;">Payment is 100% Secure via UPI</p>
+                <p style="margin-top:15px; font-size: 12px; color: #555;">Instant Access after Verification</p>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            st.write("🎯 **Skill Improvement:** Is course ke baad aapka content creation quality 5x improve ho jayega, guaranteed.")
 
     st.divider()
-    st.caption("© 2026 Neo AI Academy - Breaking the ₹499 Course Barrier.")
+    st.caption("© 2026 Neo AI Academy - Elite Learning Redefined.")
