@@ -1,98 +1,114 @@
 import streamlit as st
+import time
 
-# --- 1. PAGE CONFIGURATION ---
-st.set_page_config(page_title="Vatshunya - Instant Pain Relief", page_icon="🌿", layout="centered")
+# --- 1. PAGE SETUP ---
+st.set_page_config(page_title="Vatshunya - Official Store", page_icon="🌿", layout="centered")
 
-# Custom CSS for a clean, high-conversion look
+# --- 2. SESSION STATE (Management) ---
+if "is_dev" not in st.session_state: st.session_state.is_dev = False
+if "reviews" not in st.session_state:
+    st.session_state.reviews = [
+        {"name": "Rahul S.", "stars": 5, "comment": "Best pain relief gel!", "media": None},
+        {"name": "Anjali K.", "stars": 4, "comment": "Kaafi asardar hai, delivery fast thi.", "media": None}
+    ]
+
+# --- 3. UI STYLING ---
 st.markdown("""
     <style>
-    .stApp { background-color: #ffffff; color: #1a1a1a; }
-    .stButton>button { width: 100%; background-color: #1b5e20; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; border: none; font-size: 18px; transition: 0.3s; }
-    .stButton>button:hover { background-color: #2e7d32; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .price-text { font-size: 40px; color: #1b5e20; font-weight: bold; margin-bottom: 0px; }
-    .delivery-tag { background-color: #fff4f4; color: #d32f2f; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 10px; }
-    .product-container { text-align: center; padding: 20px; border-radius: 20px; background: #fafafa; border: 1px solid #f0f0f0; }
-    .form-box { background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #eee; margin-top: 20px; }
+    .block-container { max-width: 450px; background: #fff; padding-top: 1rem; }
+    .stApp { background-color: #f4f7f6; }
+    .dev-badge { background: #ff4b4b; color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; }
+    .review-card { background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 10px; }
+    .star-gold { color: #FFD700; font-size: 18px; }
+    .stButton>button { width: 100%; border-radius: 10px; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. HEADER ---
-st.markdown("<h1 style='text-align: center; color: #1b5e20;'>🌿 Vatshunya Care</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #666; font-size: 18px;'>Ayurvedic Roll-on for Instant Pain Relief</p>", unsafe_allow_html=True)
-st.divider()
-
-# --- 3. PRODUCT PHOTO SECTION (No Video) ---
-# Image Center Alignment
-col_left, col_mid, col_right = st.columns([0.2, 1.6, 0.2])
-
-with col_mid:
-    st.markdown("<div class='product-container'>", unsafe_allow_html=True)
-    # Aapka Dropbox Photo Link (dl=1 for direct view)
-    photo_url = "https://www.dropbox.com/scl/fi/p6yfa547mvi76he78rypp/20260423_054138.jpg?rlkey=p4g9z5qox1lt77kxwo6s90s4a&st=fagfav9i&dl=1"
-    st.image(photo_url, use_container_width=True)
-    
-    st.markdown("<p class='price-text'>Price: ₹150</p>", unsafe_allow_html=True)
-    st.markdown("<div class='delivery-tag'>🚚 FREE Home Delivery (10-15 Days)</div>", unsafe_allow_html=True)
-    
-    st.write("""
-    **Fayde:**
-    Joint aur Muscle Pain mein turant aaram | 100% Ayurvedic | Easy Roll-on
-    """)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-st.divider()
-
-# --- 4. ORDER FORM ---
-st.markdown("<h2 style='text-align: center;'>📦 Order Details</h2>", unsafe_allow_html=True)
-
-_, form_col, _ = st.columns([0.1, 1, 0.1])
-
-with form_col:
-    with st.form("order_form"):
-        st.markdown("### Shipping Information")
-        name = st.text_input("Aapka Full Name*")
-        phone = st.text_input("WhatsApp Number*", help="Order update isi par aayenge")
-        pincode = st.text_input("Area Pincode*", max_chars=6)
-        address = st.text_area("Pura Address (House No, Colony, City)*")
-        
-        st.write("---")
-        st.info("💡 Note: Proceed karne ke baad UPI payment button dikhega.")
-        
-        submit_btn = st.form_submit_button("Proceed to Pay ₹150")
-
-# --- 5. PAYMENT REDIRECTION LOGIC ---
-if submit_btn:
-    if not (name and phone and pincode and address):
-        st.error("Bhai, saari details bharna zaroori hai!")
-    elif len(phone) < 10:
-        st.error("Mobile number galat hai.")
+# --- 4. SIDEBAR: DEVELOPER ACCESS ---
+with st.sidebar:
+    st.title("Settings ⚙️")
+    if not st.session_state.is_dev:
+        dev_pass = st.text_input("Enter Developer Password", type="password")
+        if st.button("Unlock Developer Mode"):
+            if dev_pass == "NEO_DEV_2026": # Aapka strong password
+                st.session_state.is_dev = True
+                st.rerun()
+            else: st.error("Wrong Password!")
     else:
-        st.success(f"Dhanyawad {name}! Aapka order process ho raha hai.")
-        
-        # UPI Details
-        upi_id = "9665145228-2@axl" 
-        note = f"VatshunyaOrder_{phone}"
-        upi_url = f"upi://pay?pa={upi_id}&pn=VatshunyaCare&am=150&cu=INR&tn={note}"
-        
-        # Big Payment Button
-        st.markdown(f"""
-            <div style="text-align: center; margin-top: 20px; padding: 20px; border: 2px dashed #1b5e20; border-radius: 15px;">
-                <h4>Last Step: Complete Payment</h4>
-                <a href="{upi_url}">
-                    <button style="background-color: #6200ee; color: white; padding: 18px 40px; border: none; border-radius: 10px; font-size: 22px; cursor: pointer; font-weight: bold; width: 100%;">
-                        Pay ₹150 via UPI
-                    </button>
-                </a>
-                <p style="margin-top: 15px; font-size: 13px; color: #555;">(PhonePe, GPay, Paytm support)</p>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown('<span class="dev-badge">DEVELOPER MODE ACTIVE</span>', unsafe_allow_html=True)
+        if st.button("Logout Dev Mode"):
+            st.session_state.is_dev = False
+            st.rerun()
 
-# --- 6. FOOTER ---
-st.markdown("<br><br>", unsafe_allow_html=True)
-st.markdown("---")
-st.markdown("""
-    <div style='text-align: center; color: #888; font-size: 12px;'>
-        <p>© 2026 Vatshunya Ayurvedic Care | Trusted by Thousands</p>
-        <p>Pure Natural Ingredients | No Chemicals | For External Use Only</p>
+# --- 5. DEVELOPER DASHBOARD (Only visible when logged in) ---
+if st.session_state.is_dev:
+    st.header("🛠️ Admin Dashboard")
+    with st.expander("➕ Add New Product"):
+        new_name = st.text_input("Product Name")
+        new_price = st.number_input("Price", min_value=0)
+        new_img = st.text_input("Image URL (Dropbox)")
+        if st.button("Publish Product"):
+            st.success(f"Product '{new_name}' Live ho gaya!")
+    
+    with st.expander("📝 Edit Dev Details"):
+        st.text_input("Developer Name", value="Neo Developer")
+        st.text_input("Contact Email", value="dev@neo.com")
+    st.divider()
+
+# --- 6. MAIN STORE UI ---
+st.markdown("<h2 style='text-align: center; color: #1b5e20;'>🌿 Vatshunya Care</h2>", unsafe_allow_html=True)
+
+# Main Product Photo
+photo_url = "https://www.dropbox.com/scl/fi/p6yfa547mvi76he78rypp/20260423_054138.jpg?rlkey=p4g9z5qox1lt77kxwo6s90s4a&st=fagfav9i&dl=1"
+st.image(photo_url, use_container_width=True)
+
+st.markdown("<h3 style='text-align:center;'>Price: ₹150</h3>", unsafe_allow_html=True)
+
+# Order Form
+with st.expander("📦 Order & Payment Details", expanded=True):
+    name = st.text_input("Your Name")
+    phone = st.text_input("WhatsApp No")
+    addr = st.text_area("Full Address")
+    pay_app = st.selectbox("Select Payment App", ["PhonePe", "GPay", "Paytm"])
+    
+    if st.button(f"Pay ₹150 via {pay_app}"):
+        if name and phone and addr:
+            upi_url = f"upi://pay?pa=9665145228-2@axl&pn=Vatshunya&am=150&cu=INR&tn=Order_{phone}"
+            st.markdown(f'<a href="{upi_url}" target="_blank"><button style="width:100%; padding:10px; background:#2e7d32; color:white; border:none; border-radius:10px;">PROCEED TO PAYMENT</button></a>', unsafe_allow_html=True)
+        else: st.warning("Details bharein!")
+
+st.divider()
+
+# --- 7. BUYER RATINGS & REVIEWS ---
+st.header("⭐ Customer Reviews")
+
+# Review Submission Form
+with st.expander("✍️ Write a Review"):
+    rev_name = st.text_input("Your Name", key="rev_n")
+    rev_stars = st.slider("Rating", 1, 5, 5)
+    rev_text = st.text_area("Share your experience")
+    rev_media = st.text_input("Photo/Video Link (Dropbox/Drive)")
+    
+    if st.button("Submit Review"):
+        if rev_name and rev_text:
+            new_rev = {"name": rev_name, "stars": rev_stars, "comment": rev_text, "media": rev_media}
+            st.session_state.reviews.insert(0, new_rev)
+            st.success("Review submitted!")
+            st.rerun()
+
+# Display Reviews
+for r in st.session_state.reviews:
+    st.markdown(f"""
+    <div class="review-card">
+        <strong>{r['name']}</strong> <span class="star-gold">{'★' * r['stars']}</span>
+        <p style="font-size: 14px; color: #555; margin-top:5px;">{r['comment']}</p>
     </div>
     """, unsafe_allow_html=True)
+    if r['media']:
+        if ".mp4" in r['media'] or "youtube" in r['media']:
+            st.video(r['media'])
+        else:
+            st.image(r['media'], width=150)
+
+# --- FOOTER ---
+st.caption("© 2026 Vatshunya Official - Secure & Trusted")
